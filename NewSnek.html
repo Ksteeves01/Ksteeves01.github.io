@@ -20,8 +20,10 @@
     canvas {
       background-color: black;
       border: 2px solid white;
-      max-width: 100%;
-      max-height: 100%;
+      width: 100%;
+      height: 100%;
+      max-width: 600px;
+      max-height: 600px;
     }
 
     #score {
@@ -94,20 +96,17 @@
       cursor: pointer;
     }
 
-    /* Responsive */
     @media (max-width: 600px) {
-      canvas {
-        width: 90%;
-        height: auto;
-      }
-
       #score {
-        font-size: 18px;
+        font-size: 16px;
+        top: 10px;
+        left: 10px;
       }
 
       #colorSelector {
-        top: 10px;
-        right: 10px;
+        top: 5px;
+        right: 5px;
+        width: 100px;
       }
 
       #controls {
@@ -123,6 +122,12 @@
       .color-button {
         width: 20px;
         height: 20px;
+      }
+
+      canvas {
+        max-width: 100%;
+        height: auto;
+        max-height: 400px;
       }
     }
   </style>
@@ -154,7 +159,6 @@
   <div class="color-button" style="background-color: silver;" data-color="silver"></div>
 </div>
 
-<!-- On-Screen Controls -->
 <div id="controls">
   <div class="control-button" id="upButton">↑</div>
   <div style="display: flex; justify-content: space-between; width: 160px;">
@@ -179,7 +183,6 @@
   let moveQueue = [];
   let gameOver = false;
 
-  // Initialize the game
   function resetGame() {
     score = 0;
     snake = [{x: 200, y: 200}];
@@ -192,7 +195,6 @@
     gameLoop();
   }
 
-  // Generate random apple position ensuring it doesn't overlap with the snake
   function generateApple() {
     let applePosition;
     let collisionDetected;
@@ -204,41 +206,40 @@
         y: Math.floor(Math.random() * (canvasSize / grid)) * grid
       };
 
-      // Check if apple spawns under the snake
       for (let i = 0; i < snake.length; i++) {
         if (snake[i].x === applePosition.x && snake[i].y === applePosition.y) {
           collisionDetected = true;
           break;
         }
       }
-    } while (collisionDetected); // Keep generating until there's no collision
+    } while (collisionDetected);
 
     return applePosition;
   }
 
-  // Update score display
   function updateScore() {
     document.getElementById('score').textContent = `Score: ${score}`;
   }
 
-  // Draw the game elements (snake and apple)
   function drawGame() {
     context.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Draw the apple
     context.fillStyle = 'red';
     context.fillRect(apple.x, apple.y, grid, grid);
 
-    // Draw the snake
     context.fillStyle = snakeColor;
     snake.forEach(cell => {
       context.fillRect(cell.x, cell.y, grid, grid);
     });
   }
 
-  // Handle keypress for snake direction
   document.addEventListener('keydown', (e) => {
-    if (gameOver) return;
+    if (gameOver && e.key === 'Enter') {
+      resetGame();
+      return;
+    }
+
+    if (gameOver) return; // Prevent key actions when game is over
 
     if (e.key === 'ArrowUp' && direction.y === 0) {
       moveQueue.push({x: 0, y: -grid});
@@ -251,88 +252,80 @@
     }
   });
 
-  // Mobile controls
-  document.getElementById('upButton').addEventListener('click', () => {
-    if (direction.y === 0) moveQueue.push({x: 0, y: -grid});
-  });
-
-  document.getElementById('downButton').addEventListener('click', () => {
-    if (direction.y === 0) moveQueue.push({x: 0, y: grid});
-  });
-
-  document.getElementById('leftButton').addEventListener('click', () => {
-    if (direction.x === 0) moveQueue.push({x: -grid, y: 0});
-  });
-
-  document.getElementById('rightButton').addEventListener('click', () => {
-    if (direction.x === 0) moveQueue.push({x: grid, y: 0});
-  });
-
-  // Toggle on-screen controls
-  document.getElementById('onScreenControlButton').addEventListener('click', () => {
-    const controls = document.getElementById('controls');
-    if (controls.style.display === 'flex') {
-      controls.style.display = 'none';
-    } else {
-      controls.style.display = 'flex';
-    }
-  });
-
-  // Main game loop
-  function gameLoop() {
-    if (gameOver) return;
-
+  function moveSnake() {
     if (moveQueue.length > 0) {
       direction = moveQueue.shift();
     }
 
-    // Move the snake by updating each segment's position
-    let head = {x: snake[0].x + direction.x, y: snake[0].y + direction.y};
+    const head = {x: snake[0].x + direction.x, y: snake[0].y + direction.y};
 
-    // Check if snake hits walls or itself
-    if (
-      head.x < 0) head.x = canvasSize - grid;  // Wrap left side
-      if (head.x >= canvasSize) head.x = 0;    // Wrap right side
-      if (head.y < 0) head.y = canvasSize - grid;  // Wrap top side
-      if (head.y >= canvasSize) head.y = 0;    // Wrap bottom side
+    if (head.x < 0) head.x = canvasSize - grid;
+    if (head.x >= canvasSize) head.x = 0;
+    if (head.y < 0) head.y = canvasSize - grid;
+    if (head.y >= canvasSize) head.y = 0;
 
-    if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+    snake.unshift(head);
+
+    // Check for collisions with itself
+    if (snake.some((segment, index) => index !== 0 && segment.x === head.x && segment.y === head.y)) {
       gameOver = true;
       document.getElementById('gameOver').style.display = 'block';
       return;
     }
 
-    // Add new head to snake
-    snake.unshift(head);
-
-    // Check if snake eats the apple
+    // Check if the snake eats the apple
     if (head.x === apple.x && head.y === apple.y) {
       score++;
       apple = generateApple();
       updateScore();
     } else {
-      snake.pop(); // Remove the last segment if no apple eaten
+      snake.pop(); // Remove the last segment if no apple is eaten
     }
+  }
 
+  // Main game loop
+  function gameLoop() {
+    if (gameOver) return;
+
+    moveSnake();
     drawGame();
     setTimeout(gameLoop, 100);
   }
 
-  // Change snake color based on selected color
-  document.querySelectorAll('.color-button').forEach(button => {
-    button.addEventListener('click', (e) => {
-      snakeColor = e.target.getAttribute('data-color');
-    });
+  // Toggle on-screen controls
+  document.getElementById('onScreenControlButton').addEventListener('click', () => {
+    const controls = document.getElementById('controls');
+    controls.style.display = controls.style.display === 'none' ? 'flex' : 'none';
   });
 
-  // Restart the game on Enter key press
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' && gameOver) {
-      resetGame();
+  // Add on-screen control button listeners
+  document.getElementById('upButton').addEventListener('click', () => {
+    if (direction.y === 0) {
+      moveQueue.push({x: 0, y: -grid});
     }
   });
 
-  resetGame(); // Start the game initially
+  document.getElementById('downButton').addEventListener('click', () => {
+    if (direction.y === 0) {
+      moveQueue.push({x: 0, y: grid});
+    }
+  });
+
+  document.getElementById('leftButton').addEventListener('click', () => {
+    if (direction.x === 0) {
+      moveQueue.push({x: -grid, y: 0});
+    }
+  });
+
+  document.getElementById('rightButton').addEventListener('click', () => {
+    if (direction.x === 0) {
+      moveQueue.push({x: grid, y: 0});
+    }
+  });
+
+  // Start the game
+  resetGame();
 </script>
+
 </body>
 </html>
