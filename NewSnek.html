@@ -143,7 +143,7 @@
 
 <canvas id="game" width="600" height="600"></canvas>
 <div id="score">Score: 0</div>
-<div id="gameOver">Game Over! Press Enter to Restart</div>
+<div id="gameOver">Game Over! Press any button to Restart</div>
 
 <!-- Color selector for the main palette -->
 <div id="colorSelector">
@@ -247,7 +247,7 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (gameOver && e.key === 'Enter') {
+    if (gameOver) {
       resetGame();
       return;
     }
@@ -278,6 +278,7 @@
     if (head.x >= canvasSize) head.x = 0;
     if (head.y >= canvasSize) head.y = 0;
 
+    // Game over if snake collides with itself
     if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
       gameOver = true;
       document.getElementById('gameOver').style.display = 'block';
@@ -326,6 +327,12 @@
   document.querySelectorAll('.color-button').forEach(button => {
     button.addEventListener('click', () => {
       snakeColor = button.style.backgroundColor;
+    });
+  });
+
+  document.querySelectorAll('.control-button').forEach(button => {
+    button.addEventListener('click', () => {
+      if (gameOver) resetGame();
     });
   });
 
