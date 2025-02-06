@@ -31,7 +31,7 @@
       font-size: 20px;
       position: absolute;
       top: 20px;
-      left: 20px;
+      right: 20px; /* Moved score to the right */
     }
 
     #gameOver {
@@ -47,7 +47,7 @@
     #colorSelector {
       position: absolute;
       top: 80px;
-      left: 20px; /* Moved to the left */
+      left: 20px;
       display: grid;
       grid-template-columns: repeat(5, 1fr);
       gap: 5px;
@@ -103,21 +103,16 @@
       transform: translateX(-50%);
     }
 
-    /* Fix up arrow button position */
-    #upButton {
-      margin-bottom: 10px;
-    }
-
     @media (max-width: 600px) {
       #score {
         font-size: 16px;
         top: 10px;
-        left: 10px;
+        right: 10px; /* Adjusted score to the right for smaller screens */
       }
 
       #colorSelector {
         top: 5px;
-        left: 5px; /* Adjusted for smaller screens */
+        left: 5px; 
         width: 100px;
       }
 
